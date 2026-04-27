@@ -5,13 +5,13 @@ import os
 def admin_menu():
 
     while True:
-        print("\nAdmin Menu: ")
         print("1: Add_question")
         print("2: Edit question")
         print("3: Delete question")
         print("4: List questions by category")
         print("5: Import from JSON")
         print("6: Export to JSON")
+        print("0: Exit")
     
         choise = input("Choose an option: ")
 
@@ -43,7 +43,7 @@ def add_question():
     for option in options:
         option_text = input(f"Enter option {option}: ")
         options_text.append(option_text)
-    correct_option = input("Enter correct option (A, B, C, D): ")
+    correct_option = input("Enter correct option (A, B, C, D): ").upper()
     if correct_option not in options:
         print("Invalid correct option. Question not added.")
         return

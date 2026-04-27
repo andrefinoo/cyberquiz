@@ -1,64 +1,12 @@
-"""db.py
-
-Devi scrivere tutto ciò che riguarda il database SQLite.
-
-Contiene:
-
-- connessione al database cyberquiz.db
-- creazione delle tabelle se non esistono
-- funzioni per eseguire query
-- funzioni per inserire utenti
-- funzioni per cercare utenti
-- funzioni per inserire domande
-- funzioni per modificare/eliminare domande
-- funzioni per salvare tentativi
-- funzioni per salvare risposte date
-
-Tabelle da creare:
-
-users
-questions
-attempts
-attempt_answers
-models.py
-
-Devi scrivere le classi/modelli dei dati.
-
-Contiene classi come:
-
-User
-Question
-Attempt
-AttemptAnswer
-
-Serve per rappresentare in Python i dati principali.
-
-Esempio concettuale:
-
-User:
-- id
-- username
-- password_hash
-- created_at
-
-Question:
-- id
-- category
-- text
-- option_a
-- option_b
-- option_c
-- option_d
-- correct_option
-- difficulty"""
-
 import sqlite3
 
 DB_NAME = "cyberquiz.db"
 
 
 def get_connection():
-    return sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
 def create_tables():
@@ -116,14 +64,6 @@ def create_tables():
     conn.commit()
     conn.close()
 
-"""
-- funzioni per eseguire query
-- funzioni per inserire utenti
-- funzioni per cercare utenti
-- funzioni per inserire domande
-- funzioni per modificare/eliminare domande
-- funzioni per salvare tentativi
-- funzioni per salvare risposte date"""
 
 def execute_query(query, params=()):
     conn = get_connection()
@@ -132,42 +72,182 @@ def execute_query(query, params=()):
     conn.commit()
     conn.close()
 
-def insert_user(username, password_hash):
-    execute_query("INSERT INTO users (username, password_hash) VALUES (?, ?)", (username, password_hash))
 
-def find_user_by_username(username):
+def fetch_one(query, params=()):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
-    user = cursor.fetchone()
+    cursor.execute(query, params)
+    row = cursor.fetchone()
     conn.close()
-    return user
+
+    if row is None:
+        return None
+
+    return dict(row)
+
+
+def fetch_all(query, params=()):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [dict(row) for row in rows]
+
+
+# =========================
+# UTENTI
+# =========================
+
+def insert_user(username, password_hash):
+    execute_query("""
+    INSERT INTO users (username, password_hash)
+    VALUES (?, ?)
+    """, (username, password_hash))
+
+
+def find_user_by_username(username):
+    return fetch_one("""
+    SELECT *
+    FROM users
+    WHERE username = ?
+    """, (username,))
+
+
+# =========================
+# DOMANDE
+# =========================
+
+def add_question(category, text, options, correct_option, difficulty):
+    execute_query("""
+    INSERT INTO questions (
+        category, text,
+        option_a, option_b, option_c, option_d,
+        correct_option, difficulty
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        category,
+        text,
+        options[0],
+        options[1],
+        options[2],
+        options[3],
+        correct_option,
+        difficulty
+    ))
+
 
 def insert_question(category, text, option_a, option_b, option_c, option_d, correct_option, difficulty):
-    execute_query("""
-    INSERT INTO questions (category, text, option_a, option_b, option_c, option_d, correct_option, difficulty)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (category, text, option_a, option_b, option_c, option_d, correct_option, difficulty))
+    add_question(
+        category,
+        text,
+        [option_a, option_b, option_c, option_d],
+        correct_option,
+        difficulty
+    )
 
-def update_question(question_id, category, text, option_a, option_b, option_c, option_d, correct_option, difficulty):
+
+def edit_question(question_id, category, text, option_a, option_b, option_c, option_d, correct_option, difficulty):
     execute_query("""
     UPDATE questions
-    SET category = ?, text = ?, option_a = ?, option_b = ?, option_c = ?, option_d = ?, correct_option = ?, difficulty = ?
+    SET category = ?,
+        text = ?,
+        option_a = ?,
+        option_b = ?,
+        option_c = ?,
+        option_d = ?,
+        correct_option = ?,
+        difficulty = ?
     WHERE id = ?
-    """, (category, text, option_a, option_b, option_c, option_d, correct_option, difficulty, question_id))
+    """, (
+        category,
+        text,
+        option_a,
+        option_b,
+        option_c,
+        option_d,
+        correct_option,
+        difficulty,
+        question_id
+    ))
+
+
+def update_question(question_id, category, text, option_a, option_b, option_c, option_d, correct_option, difficulty):
+    edit_question(
+        question_id,
+        category,
+        text,
+        option_a,
+        option_b,
+        option_c,
+        option_d,
+        correct_option,
+        difficulty
+    )
+
 
 def delete_question(question_id):
-    execute_query("DELETE FROM questions WHERE id = ?", (question_id,))
+    execute_query("""
+    DELETE FROM questions
+    WHERE id = ?
+    """, (question_id,))
+
+
+def get_question_by_id(question_id):
+    return fetch_one("""
+    SELECT *
+    FROM questions
+    WHERE id = ?
+    """, (question_id,))
+
+
+def get_all_questions():
+    return fetch_all("""
+    SELECT *
+    FROM questions
+    ORDER BY id
+    """)
+
+
+def get_questions_by_category(category):
+    return fetch_all("""
+    SELECT *
+    FROM questions
+    WHERE category = ?
+    ORDER BY id
+    """, (category,))
+
+
+# =========================
+# TENTATIVI QUIZ
+# =========================
 
 def insert_attempt(user_id, score, correct_count, wrong_count, duration_seconds):
     execute_query("""
-    INSERT INTO attempts (user_id, score, correct_count, wrong_count, duration_seconds)
+    INSERT INTO attempts (
+        user_id, score, correct_count, wrong_count, duration_seconds
+    )
     VALUES (?, ?, ?, ?, ?)
-    """, (user_id, score, correct_count, wrong_count, duration_seconds))
+    """, (
+        user_id,
+        score,
+        correct_count,
+        wrong_count,
+        duration_seconds
+    ))
+
 
 def insert_attempt_answer(attempt_id, question_id, user_answer, is_correct):
     execute_query("""
-    INSERT INTO attempt_answers (attempt_id, question_id, user_answer, is_correct)
+    INSERT INTO attempt_answers (
+        attempt_id, question_id, user_answer, is_correct
+    )
     VALUES (?, ?, ?, ?)
-    """, (attempt_id, question_id, user_answer, is_correct))
-
+    """, (
+        attempt_id,
+        question_id,
+        user_answer,
+        is_correct
+    ))
