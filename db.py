@@ -4,7 +4,7 @@ DB_NAME = "cyberquiz.db"
 
 
 def get_connection():
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_NAME, timeout=10)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -251,3 +251,29 @@ def insert_attempt_answer(attempt_id, question_id, user_answer, is_correct):
         user_answer,
         is_correct
     ))
+
+def import_questions(questions):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    for q in questions:
+        cursor.execute("""
+        INSERT INTO questions (
+            category, text,
+            option_a, option_b, option_c, option_d,
+            correct_option, difficulty
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            q["category"],
+            q["text"],
+            q["option_a"],
+            q["option_b"],
+            q["option_c"],
+            q["option_d"],
+            q["correct_option"],
+            q["difficulty"]
+        ))
+
+    conn.commit()
+    conn.close()

@@ -180,15 +180,12 @@ def list_questions_by_category():
         print(f"{q['id']:<5} {q['category']:<20} {q['difficulty']:<12} {q['text'][:40]}")
 
 def import_from_json():
-    # Chiediamo il percorso del file JSON
     filepath = input("Enter JSON file path: ")
 
-    # Verifichiamo che il file esista
     if not os.path.exists(filepath):
         print("File not found.")
         return
 
-    # Leggiamo il file JSON
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             questions = json.load(f)
@@ -196,6 +193,13 @@ def import_from_json():
         print("Invalid JSON file.")
         return
 
+    try:
+        db.import_questions(questions)
+        print(f"Import complete. {len(questions)} questions imported.")
+    except KeyError as e:
+        print(f"Errore: campo mancante nel JSON: {e}")
+    except Exception as e:
+        print(f"Errore durante l'import: {e}")
     # Importiamo ogni domanda nel database
     imported = 0
     for q in questions:

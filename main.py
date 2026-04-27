@@ -18,7 +18,7 @@ def registrati():
 
     if username == "" or password == "":
         print("Username e password non possono essere vuoti.")
-        return None
+        return
 
     password_hash = utils.hash_password(password)
 
@@ -32,8 +32,8 @@ def registrati():
 def login():
     """
     Effettua il login dell'utente.
-    Se il login va bene, restituisce l'id utente.
-    Altrimenti restituisce None.
+    Se il login va bene, restituisce l'id dell'utente.
+    Se il login fallisce, restituisce None.
     """
     print("\n=== LOGIN ===")
 
@@ -46,9 +46,9 @@ def login():
         print("Utente non trovato.")
         return None
 
-    user_id = user[0]
-    username_db = user[1]
-    password_hash = user[2]
+    user_id = user["id"]
+    username_db = user["username"]
+    password_hash = user["password_hash"]
 
     if utils.check_password(password, password_hash):
         print(f"Login effettuato. Benvenuto {username_db}!")
@@ -61,11 +61,12 @@ def login():
 def main():
     """
     Menu principale del programma.
-    Collega insieme db.py, quiz_engine.py, reports.py e admin.py.
     """
     db.create_tables()
 
     logged_user_id = None
+
+    print("Database pronto. Benvenuto in CyberQuiz!")
 
     while True:
         print("\n=== CYBERQUIZ LAB ===")
