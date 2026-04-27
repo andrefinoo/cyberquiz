@@ -1,0 +1,13 @@
+def add_questions():
+    ...
+
+def update_questions():
+    ...
+
+def remove_questions():
+    ...
+
+def list_questions():
+    ...
+
+
