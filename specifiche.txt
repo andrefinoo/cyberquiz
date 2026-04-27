@@ -1,0 +1,293 @@
+main.py
+
+Devi scrivere il menu principale del programma.
+
+Contiene:
+
+- avvio del programma
+- ciclo while principale
+- stampa del menu:
+  1) Login
+  2) Registrati
+  3) Avvia Quiz
+  4) Report personali
+  5) Report globali
+  6) Admin
+  0) Esci
+- gestione della scelta dell’utente
+- chiamate alle funzioni degli altri file
+
+Esempio logico:
+
+main.py importa:
+- db.py
+- quiz_engine.py
+- admin.py
+- reports.py
+- utils.py
+
+main.py deve solo collegare tutto.
+Non deve contenere tutta la logica del quiz.
+db.py
+
+Devi scrivere tutto ciò che riguarda il database SQLite.
+
+Contiene:
+
+- connessione al database cyberquiz.db
+- creazione delle tabelle se non esistono
+- funzioni per eseguire query
+- funzioni per inserire utenti
+- funzioni per cercare utenti
+- funzioni per inserire domande
+- funzioni per modificare/eliminare domande
+- funzioni per salvare tentativi
+- funzioni per salvare risposte date
+
+Tabelle da creare:
+
+users
+questions
+attempts
+attempt_answers
+models.py
+
+Devi scrivere le classi/modelli dei dati.
+
+Contiene classi come:
+
+User
+Question
+Attempt
+AttemptAnswer
+
+Serve per rappresentare in Python i dati principali.
+
+Esempio concettuale:
+
+User:
+- id
+- username
+- password_hash
+- created_at
+
+Question:
+- id
+- category
+- text
+- option_a
+- option_b
+- option_c
+- option_d
+- correct_option
+- difficulty
+quiz_engine.py
+
+Devi scrivere tutta la logica del quiz utente.
+
+Contiene:
+
+- scelta categoria oppure quiz casuale
+- scelta numero domande
+- caricamento domande dal database
+- visualizzazione domanda e opzioni A/B/C/D
+- validazione input
+- controllo risposta corretta
+- calcolo punteggio
+- conteggio corrette/errate
+- calcolo tempo impiegato
+- salvataggio tentativo nel database
+- salvataggio risposte date nel database
+
+Questo file è il cuore del quiz.
+
+admin.py
+
+Devi scrivere la modalità amministratore.
+
+Contiene:
+
+- menu admin
+- aggiunta domanda
+- modifica domanda
+- eliminazione domanda
+- elenco domande per categoria
+- import domande da JSON
+- export domande in JSON
+
+Il menu admin può essere tipo:
+
+1) Aggiungi domanda
+2) Modifica domanda
+3) Elimina domanda
+4) Mostra domande per categoria
+5) Importa domande da JSON
+6) Esporta domande in JSON
+0) Torna al menu principale
+reports.py
+
+Devi scrivere tutti i report statistici.
+
+Contiene:
+
+- classifica utenti per punteggio medio
+- percentuale correttezza per categoria
+- top 10 domande più sbagliate
+- tempo medio completamento quiz
+- andamento utente negli ultimi N tentativi
+- eventuale esportazione CSV
+
+Qui devi usare query SQL con:
+
+AVG
+COUNT
+GROUP BY
+ORDER BY
+LIMIT
+utils.py
+
+Devi scrivere le funzioni di supporto usate dagli altri file.
+
+Contiene:
+
+- validazione input
+- pulizia input utente
+- hashing password
+- generazione salt, se fai il bonus
+- controllo scelta A/B/C/D
+- funzioni per stampare titoli/menu
+- gestione data e ora
+- eventuale logging eventi
+
+Esempi di funzioni utili:
+
+hash_password(password)
+check_password(password, hash_salvato)
+input_int(messaggio)
+input_choice(messaggio, scelte_valide)
+current_datetime()
+data/questions.json
+
+Devi scrivere almeno 30 domande iniziali in formato JSON.
+
+Devono essere distribuite su almeno 5 categorie.
+
+Categorie possibili:
+
+phishing
+password security
+network security
+SQL injection
+log analysis
+incident response
+crittografia base
+
+Ogni domanda deve avere:
+
+- category
+- text
+- option_a
+- option_b
+- option_c
+- option_d
+- correct_option
+- difficulty
+cyberquiz.db
+
+Non devi scriverlo a mano.
+
+È il file database che viene creato automaticamente dal programma oppure da schema.sql.
+
+Deve contenere:
+
+- utenti registrati
+- domande
+- tentativi quiz
+- risposte date dagli utenti
+schema.sql
+
+Devi scrivere lo script SQL di creazione delle tabelle.
+
+Contiene:
+
+CREATE TABLE users (...)
+CREATE TABLE questions (...)
+CREATE TABLE attempts (...)
+CREATE TABLE attempt_answers (...)
+
+Serve come alternativa o supporto alla creazione automatica da db.py.
+
+queries.sql
+
+Devi scrivere le query SQL usate per i report.
+
+Contiene query tipo:
+
+- media punteggio utenti
+- correttezza per categoria
+- domande più sbagliate
+- tempo medio quiz
+- ultimi tentativi di un utente
+README.md
+
+Devi scrivere la spiegazione del progetto.
+
+Contiene:
+
+- titolo progetto
+- descrizione breve
+- funzionalità principali
+- struttura dei file
+- come installare/eseguire il progetto
+- come inizializzare il database
+- come importare le domande
+- esempi di utilizzo
+- spiegazione dei report
+- eventuali funzionalità bonus implementate
+audit.log facoltativo
+
+Se fai il bonus logging, questo file contiene automaticamente gli eventi.
+
+Deve registrare cose come:
+
+- login utente
+- registrazione utente
+- quiz avviato
+- quiz completato
+- azioni admin
+- import/export domande
+attempts.json facoltativo
+
+Se vuoi usare il dataset bonus, contiene circa 200 tentativi realistici.
+
+Serve per avere dati già pronti per testare i report.
+
+Contiene dati tipo:
+
+- username o user_id
+- score
+- correct_count
+- wrong_count
+- duration_seconds
+- created_at
+In sintesi
+
+La struttura finale deve essere questa:
+
+cyberquiz/
+│
+├── main.py              → menu principale
+├── db.py                → database SQLite e query base
+├── models.py            → classi dei dati
+├── quiz_engine.py       → logica del quiz
+├── admin.py             → gestione domande e import/export
+├── reports.py           → statistiche e report
+├── utils.py             → funzioni di supporto
+├── README.md            → istruzioni progetto
+├── schema.sql           → creazione tabelle
+├── queries.sql          → query dei report
+├── cyberquiz.db         → database generato
+├── audit.log            → log eventi, se fai il bonus
+└── data/
+    ├── questions.json   → almeno 30 domande
+    └── attempts.json    → tentativi finti, opzionale
