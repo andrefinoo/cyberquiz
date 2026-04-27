@@ -11,6 +11,13 @@
 - gestione della scelta dell’utente
 - chiamate alle funzioni degli altri file"""
 
+import db
+
 def main():
-    ...
+    
+  db.create_tables();
+print("Database creato, bencenuto in cyberquiz!")
+
+if __name__ == "__main__":
+    main()
 
