@@ -1,4 +1,5 @@
 import sqlite3
+import csv
 
 
 def classifica_utenti(cursor):
@@ -21,10 +22,10 @@ def classifica_utenti(cursor):
         print(f"Utente: {utente[0]:<15} | Media: {utente[1]:.2f}")
     
     return risultati
-classifica_utenti(cursor)
+classifica_utenti()
 
 # 3. Chiudi la connessione quando hai finito
-conn.close() 
+# conn.close()  # Removed as conn is not defined here 
     
 
 def Percentuale_Correttezza_Categoria():
@@ -137,49 +138,49 @@ def Andamento_Utente():
 
 def EsportazioneCSV():
     conn = sqlite3.connect('cyberquiz.db')
-cursor = conn.cursor()
+    cursor = conn.cursor()
 
-# 1. Prendi TUTTE le domande, con la risposta esatta e la categoria
-query = """
-SELECT 
-    questions.category, 
-    questions.text AS domanda, 
-    CASE 
-        WHEN attempt_answers.is_correct = 1 THEN 'Corretta'
-        ELSE 'Sbagliata'
-    END AS risultato,
-    attempt_answers.user_answer AS risposta_utente,
-    attempts.score AS punteggio,
-    attempts.duration_seconds AS tempo_secondi,
-    attempts.created_at AS data_ora
-FROM questions
-JOIN attempt_answers ON questions.id = attempt_answers.question_id
-JOIN attempts ON attempt_answers.attempt_id = attempts.id
-ORDER BY attempts.created_at DESC;
-"""
+    # 1. Prendi TUTTE le domande, con la risposta esatta e la categoria
+    query = """
+    SELECT 
+        questions.category, 
+        questions.text AS domanda, 
+        CASE 
+            WHEN attempt_answers.is_correct = 1 THEN 'Corretta'
+            ELSE 'Sbagliata'
+        END AS risultato,
+        attempt_answers.user_answer AS risposta_utente,
+        attempts.score AS punteggio,
+        attempts.duration_seconds AS tempo_secondi,
+        attempts.created_at AS data_ora
+    FROM questions
+    JOIN attempt_answers ON questions.id = attempt_answers.question_id
+    JOIN attempts ON attempt_answers.attempt_id = attempts.id
+    ORDER BY attempts.created_at DESC;
+    """
 
-cursor.execute(query)
-risultati = cursor.fetchall()
+    cursor.execute(query)
+    risultati = cursor.fetchall()
 
-# 2. Apri il file CSV in modalità scrittura ('w')
-with open('report_domande_cybersecurity.csv', 'w', newline='', encoding='utf-8') as file:
-    writer = csv.writer(file)
-    
-    # Scrivi la riga di intestazione
-    writer.writerow([
-        "Categoria",
-        "Domanda",
-        "Risultato",
-        "Risposta Utente",
-        "Punteggio",
-        "Tempo (s)",
-        "Data/Ora"
-    ])
-    
-    # Scrivi tutte le righe estratte dal database
-    writer.writerows(risultati)
+    # 2. Apri il file CSV in modalità scrittura ('w')
+    with open('report_domande_cybersecurity.csv', 'w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        
+        # Scrivi la riga di intestazione
+        writer.writerow([
+            "Categoria",
+            "Domanda",
+            "Risultato",
+            "Risposta Utente",
+            "Punteggio",
+            "Tempo (s)",
+            "Data/Ora"
+        ])
+        
+        # Scrivi tutte le righe estratte dal database
+        writer.writerows(risultati)
 
-print("\n✅ Report CSV creato con successo!")
-print("File salvato come: report_domande_cybersecurity.csv")
+    print("\n✅ Report CSV creato con successo!")
+    print("File salvato come: report_domande_cybersecurity.csv")
 
-conn.close()
+    conn.close()
