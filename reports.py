@@ -1,186 +1,163 @@
-import sqlite3
 import csv
+import db
 
 
-def classifica_utenti(cursor):
-    conn = sqlite3.connect("cyberquiz.db")
+def classifica_utenti():
+    conn = db.get_connection()
     cursor = conn.cursor()
 
-    query = """
+    cursor.execute("""
     SELECT users.username, AVG(attempts.score)
     FROM users
     JOIN attempts ON users.id = attempts.user_id
-    GROUP BY users.username
+    GROUP BY users.id
     ORDER BY AVG(attempts.score) DESC
-    """
-    cursor.execute(query)
+    LIMIT 5
+    """)
+
     risultati = cursor.fetchall()
+    conn.close()
 
-    print("--- CLASSIFICA UTENTI ---")
-    for utente in risultati:
-        # Formattiamo a 2 cifre decimali
-        print(f"Utente: {utente[0]:<15} | Media: {utente[1]:.2f}")
-    
-    return risultati
-classifica_utenti()
+    print("\n--- TOP 5 UTENTI PER MEDIA PUNTEGGIO ---")
 
-# 3. Chiudi la connessione quando hai finito
-# conn.close()  # Removed as conn is not defined here 
-    
+    if not risultati:
+        print("Nessun dato disponibile.")
+        return
 
-def Percentuale_Correttezza_Categoria():
-    conn = sqlite3.connect("cyberquiz.db")
+    for username, media in risultati:
+        print(f"{username}: {media:.2f}")
+
+
+def correttezza_per_categoria():
+    conn = db.get_connection()
     cursor = conn.cursor()
-    query = """
-    SELECT questions.category, 
-       CAST(SUM(CASE WHEN attempt_answers.is_correct = 1 THEN 1 ELSE 0 END) AS REAL) / COUNT(*) * 100 AS percentage
+
+    cursor.execute("""
+    SELECT questions.category,
+           COUNT(*) AS totale,
+           SUM(attempt_answers.is_correct) AS corrette,
+           ROUND(SUM(attempt_answers.is_correct) * 100.0 / COUNT(*), 2) AS percentuale
     FROM questions
     JOIN attempt_answers ON questions.id = attempt_answers.question_id
     GROUP BY questions.category
-    ORDER BY percentage DESC;
-    """
-    cursor.execute(query)
+    ORDER BY percentuale DESC
+    """)
+
     risultati = cursor.fetchall()
-    
-    print("--- PercentUALE CORRETTEZZA PER CATEGORIA ---")
-    for categoria in risultati:
-        print(f"Categoria: {categoria[0]:<20} | Correttezza: {categoria[1]:.2f}%")
-    
     conn.close()
-    return risultati
+
+    print("\n--- CORRETTEZZA PER CATEGORIA ---")
+
+    if not risultati:
+        print("Nessun dato disponibile.")
+        return
+
+    for categoria, totale, corrette, percentuale in risultati:
+        print(f"{categoria}: {percentuale}% ({corrette}/{totale})")
 
 
-def Top10_Domande_Sbagliate():
-    conn = sqlite3.connect("cyberquiz.db")
+def domande_piu_sbagliate():
+    conn = db.get_connection()
     cursor = conn.cursor()
 
-    query = """
-    SELECT 
-        questions.text, 
-        COUNT(attempt_answers.id) AS sbagliate
+    cursor.execute("""
+    SELECT questions.id, questions.text, COUNT(*) AS errori
     FROM questions
     JOIN attempt_answers ON questions.id = attempt_answers.question_id
     WHERE attempt_answers.is_correct = 0
-    GROUP BY questions.id, questions.text
-    ORDER BY sbagliate DESC
-    LIMIT 10;
-    """
-    cursor.execute(query)
+    GROUP BY questions.id
+    ORDER BY errori DESC
+    LIMIT 10
+    """)
+
     risultati = cursor.fetchall()
+    conn.close()
 
     print("\n--- TOP 10 DOMANDE PIÙ SBAGLIATE ---")
-    print("{:<60} {:<10}".format("DOMANDA", "Errori"))
-    print("-" * 70)
 
-    for domanda, conteggio in risultati:
-        # Tronca la domanda se è troppo lunga da visualizzare bene
-        testo_corto = (domanda[:57] + '...') if len(domanda) > 60 else domanda
-        print(f"{testo_corto:<60} {conteggio:<10}")
-    
-    conn.close()
+    if not risultati:
+        print("Nessun dato disponibile.")
+        return
+
+    for question_id, testo, errori in risultati:
+        print(f"ID {question_id} - {errori} errori - {testo}")
 
 
-def Tempo_Medio_Completamento_Quiz():
-    conn = sqlite3.connect("cyberquiz.db")
-    cursor = conn.cursor()
-    
-    query = """
-    SELECT 
-        users.username, 
-        AVG(attempts.duration_seconds) AS tempo_medio
-    FROM users
-    JOIN attempts ON users.id = attempts.user_id
-    GROUP BY users.username
-    ORDER BY tempo_medio DESC
-    LIMIT 10;
-    """
-    cursor.execute(query)
-    risultati = cursor.fetchall()
-    
-    print("\n--- TEMPO MEDIO DI COMPLETAMENTO (TOP 10) ---")
-    print("{:<15} {:<15}".format("Utente", "Tempo (s)"))
-    print("-" * 30)
-    
-    for username, tempo in risultati:
-        print(f"{username:<15} {tempo:.1f}")
-    
-    conn.close()
-    return risultati
-
-
-def Andamento_Utente():
-    conn = sqlite3.connect("cyberquiz.db")
-    cursor = conn.cursor()
-    
-    query = """
-    SELECT 
-        users.username, 
-        AVG(attempts.duration_seconds) AS tempo_medio
-    FROM users
-    JOIN attempts ON users.id = attempts.user_id
-    GROUP BY users.username
-    ORDER BY tempo_medio DESC
-    LIMIT 10;
-    """
-    cursor.execute(query)
-    risultati = cursor.fetchall()
-    
-    print("\n--- TEMPO MEDIO DI COMPLETAMENTO (TOP 10) ---")
-    print("{:<15} {:<15}".format("Utente", "Tempo (s)"))
-    print("-" * 30)
-    
-    for username, tempo in risultati:
-        print(f"{username:<15} {tempo:.1f}")
-    
-    conn.close()
-    return risultati
-    
-
-def EsportazioneCSV():
-    conn = sqlite3.connect('cyberquiz.db')
+def tempo_medio_quiz():
+    conn = db.get_connection()
     cursor = conn.cursor()
 
-    # 1. Prendi TUTTE le domande, con la risposta esatta e la categoria
-    query = """
-    SELECT 
-        questions.category, 
-        questions.text AS domanda, 
-        CASE 
-            WHEN attempt_answers.is_correct = 1 THEN 'Corretta'
-            ELSE 'Sbagliata'
-        END AS risultato,
-        attempt_answers.user_answer AS risposta_utente,
-        attempts.score AS punteggio,
-        attempts.duration_seconds AS tempo_secondi,
-        attempts.created_at AS data_ora
-    FROM questions
-    JOIN attempt_answers ON questions.id = attempt_answers.question_id
-    JOIN attempts ON attempt_answers.attempt_id = attempts.id
-    ORDER BY attempts.created_at DESC;
-    """
+    cursor.execute("""
+    SELECT AVG(duration_seconds)
+    FROM attempts
+    """)
 
-    cursor.execute(query)
+    risultato = cursor.fetchone()
+    conn.close()
+
+    print("\n--- TEMPO MEDIO QUIZ ---")
+
+    if risultato[0] is None:
+        print("Nessun dato disponibile.")
+        return
+
+    print(f"Tempo medio: {risultato[0]:.2f} secondi")
+
+
+def andamento_utente(user_id):
+    conn = db.get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT score, correct_count, wrong_count, duration_seconds, created_at
+    FROM attempts
+    WHERE user_id = ?
+    ORDER BY created_at DESC
+    LIMIT 5
+    """, (user_id,))
+
     risultati = cursor.fetchall()
+    conn.close()
 
-    # 2. Apri il file CSV in modalità scrittura ('w')
-    with open('report_domande_cybersecurity.csv', 'w', newline='', encoding='utf-8') as file:
+    print("\n--- ULTIMI 5 TENTATIVI ---")
+
+    if not risultati:
+        print("Nessun tentativo trovato.")
+        return
+
+    for score, corrette, errate, tempo, data in risultati:
+        print(f"{data} | Score: {score} | Corrette: {corrette} | Errate: {errate} | Tempo: {tempo}s")
+
+
+def esporta_csv():
+    conn = db.get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT users.username, attempts.score, attempts.correct_count,
+           attempts.wrong_count, attempts.duration_seconds, attempts.created_at
+    FROM attempts
+    JOIN users ON users.id = attempts.user_id
+    ORDER BY attempts.created_at DESC
+    """)
+
+    risultati = cursor.fetchall()
+    conn.close()
+
+    if not risultati:
+        print("Nessun dato da esportare.")
+        return
+
+    with open("report_quiz.csv", "w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
-        
-        # Scrivi la riga di intestazione
-        writer.writerow([
-            "Categoria",
-            "Domanda",
-            "Risultato",
-            "Risposta Utente",
-            "Punteggio",
-            "Tempo (s)",
-            "Data/Ora"
-        ])
-        
-        # Scrivi tutte le righe estratte dal database
+        writer.writerow(["Username", "Score", "Corrette", "Errate", "Tempo", "Data"])
         writer.writerows(risultati)
 
-    print("\n✅ Report CSV creato con successo!")
-    print("File salvato come: report_domande_cybersecurity.csv")
+    print("File report_quiz.csv creato correttamente.")
 
-    conn.close()
+
+def report_globali():
+    classifica_utenti()
+    correttezza_per_categoria()
+    domande_piu_sbagliate()
+    tempo_medio_quiz()
