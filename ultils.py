@@ -93,7 +93,6 @@ def generate_salt(length=16):
 
 def sanitize_input(text):
     """Pulisce l'input utente rimuovendo caratteri pericolosi"""
-    import re
     # Rimuovi caratteri di controllo e potenzialmente pericolosi
     text = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', text)
     # Limita lunghezza
@@ -139,7 +138,6 @@ def load_questions_from_json(filepath="data/questions.json"):
 
 def save_questions_to_json(questions, filepath="data/questions.json"):
     """Salva domande su file JSON"""
-    import os
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     try:
         with open(filepath, 'w', encoding='utf-8') as f:
@@ -152,20 +150,16 @@ def save_questions_to_json(questions, filepath="data/questions.json"):
 
 def validate_email(email):
     """Valida un indirizzo email"""
-    import re
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email) is not None
 
 def generate_random_password(length=12):
     """Genera una password casuale sicura"""
-    import string
-    import secrets
     chars = string.ascii_letters + string.digits + string.punctuation
     return ''.join(secrets.choice(chars) for _ in range(length))
 
 def hash_password_with_salt(password, salt=None):
     """Hash password con salt per maggiore sicurezza"""
-    import hashlib
     if salt is None:
         salt = generate_salt()
     salted_password = password + salt
