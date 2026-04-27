@@ -12,28 +12,27 @@ def admin_menu():
         print("4: List questions by category")
         print("5: Import from JSON")
         print("6: Export to JSON")
+    
+        choise = input("Choose an option: ")
 
-
-    choise = input("Choose an option: ")
-
-    match choise:
-        case "0":
-            print("Exiting admin menu.")
-            break
-        case "1":
-            add_question()
-        case "2":
-            edit_question()
-        case "3":
-            delete_question()
-        case "4":
-            list_questions_by_category()
-        case "5":
-            import_from_json()
-        case "6":
-            export_to_json()
-        case _:
-            print("Invalid choice. Please try again.")
+        match choise:
+            case "0":
+                print("Exiting admin menu.")
+                break
+            case "1":
+                add_question()
+            case "2":
+                edit_question()
+            case "3":
+                delete_question()
+            case "4":
+                list_questions_by_category()
+            case "5":
+                import_from_json()
+            case "6":
+                export_to_json()
+            case _:
+                print("Invalid choice. Please try again.")
 
 
 def add_question():
