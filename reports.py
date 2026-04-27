@@ -26,10 +26,6 @@ classifica_utenti(cursor)
 # 3. Chiudi la connessione quando hai finito
 conn.close() 
     
-    
-
-
-
 
 def Percentuale_Correttezza_Categoria():
     conn = sqlite3.connect("cyberquiz.db")
